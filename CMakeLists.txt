@@ -28,16 +28,16 @@ CPMAddPackage(
 )
 
 # Install Microsoft.Web.WebView2 NuGet package to allow WebViews on Windows
-if (MSVC)
-  message(STATUS "Setting up WebView dependencies")
-  execute_process(COMMAND pwsh -NoProfile -File scripts/DownloadWebView2.ps1
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  RESULT_VARIABLE DOWNLOAD_WEBVIEW2_RESULT)
+# if (MSVC)
+#   message(STATUS "Setting up WebView dependencies")
+#   execute_process(COMMAND pwsh -NoProfile -File scripts/DownloadWebView2.ps1
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#   RESULT_VARIABLE DOWNLOAD_WEBVIEW2_RESULT)
 
-  if (NOT DOWNLOAD_WEBVIEW2_RESULT EQUAL 0)
-      message(FATAL_ERROR "Failed to download Microsoft.Web.WebView2 NuGet package. Result: ${DOWNLOAD_WEBVIEW2_RESULT}")
-  endif()
-endif()
+#   if (NOT DOWNLOAD_WEBVIEW2_RESULT EQUAL 0)
+#       message(FATAL_ERROR "Failed to download Microsoft.Web.WebView2 NuGet package. Result: ${DOWNLOAD_WEBVIEW2_RESULT}")
+#   endif()
+# endif()
 
 # Enables strict warnings and treats warnings as errors.
 # This needs to be set up only for your projects, not 3rd party

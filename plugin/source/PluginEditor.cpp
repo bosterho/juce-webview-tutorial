@@ -85,7 +85,7 @@ std::vector<std::byte> getWebViewFileAsBytes(const juce::String& filepath) {
   return {};
 }
 
-constexpr auto LOCAL_DEV_SERVER_ADDRESS = "http://127.0.0.1:8080";
+constexpr auto LOCAL_DEV_SERVER_ADDRESS = "http://127.0.0.1:5500/plugin/ui/public/index.html";
 }  // namespace
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
@@ -160,10 +160,10 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
   // webView.goToURL("https://juce.com");
 
   // This is necessary if we want to use a ResourceProvider
-  webView.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
+  // webView.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
 
   // This can be used for hot reloading
-  // webView.goToURL(LOCAL_DEV_SERVER_ADDRESS);
+  webView.goToURL(LOCAL_DEV_SERVER_ADDRESS);
 
   runJavaScriptButton.onClick = [this] {
     constexpr auto JAVASCRIPT_TO_RUN{"console.log(\"Hello from C++!\");"};

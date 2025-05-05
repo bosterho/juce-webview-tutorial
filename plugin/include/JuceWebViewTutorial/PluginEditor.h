@@ -34,7 +34,7 @@ private:
   juce::Slider gainSlider{"gain slider"};
   juce::SliderParameterAttachment gainSliderAttachment;
 
-  juce::ToggleButton bypassButton{"Bypass"};
+  juce::ToggleButton bypassToggle{"Bypass"};
   juce::ButtonParameterAttachment bypassButtonAttachment;
 
   juce::Label distortionTypeLabel{"distortion type label", "Distortion"};

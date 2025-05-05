@@ -97,7 +97,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
           gainSlider, nullptr},
       bypassButtonAttachment{
           *processorRef.getState().getParameter(id::BYPASS.getParamID()),
-          bypassButton, nullptr},
+          bypassToggle, nullptr},
       distortionTypeComboBoxAttachment{*processorRef.getState().getParameter(
                                            id::DISTORTION_TYPE.getParamID()),
                                        distortionTypeComboBox, nullptr},
@@ -192,7 +192,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
   gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBar);
   addAndMakeVisible(gainSlider);
 
-  addAndMakeVisible(bypassButton);
+  addAndMakeVisible(bypassToggle);
 
   addAndMakeVisible(distortionTypeLabel);
 
@@ -218,7 +218,7 @@ void AudioPluginAudioProcessorEditor::resized() {
   emitJavaScriptEventButton.setBounds(bounds.removeFromTop(50).reduced(5));
   labelUpdatedFromJavaScript.setBounds(bounds.removeFromTop(50).reduced(5));
   gainSlider.setBounds(bounds.removeFromTop(50).reduced(5));
-  bypassButton.setBounds(bounds.removeFromTop(50).reduced(10));
+  bypassToggle.setBounds(bounds.removeFromTop(50).reduced(10));
   distortionTypeLabel.setBounds(bounds.removeFromTop(50).reduced(5));
   distortionTypeComboBox.setBounds(bounds.removeFromTop(50).reduced(5));
 }

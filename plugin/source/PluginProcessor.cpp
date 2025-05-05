@@ -126,20 +126,103 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(
 
 void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                              juce::MidiBuffer& midiMessages) {
-  juce::ignoreUnused(midiMessages);
-
   juce::ScopedNoDenormals noDenormals;
   auto totalNumInputChannels = getTotalNumInputChannels();
   auto totalNumOutputChannels = getTotalNumOutputChannels();
 
   // In case we have more outputs than inputs, this code clears any output
-  // channels that didn't contain input data, (because these aren't
-  // guaranteed to be empty - they may contain garbage).
-  // This is here to avoid people getting screaming feedback
-  // when they first compile a plugin, but obviously you don't need to keep
-  // this code if your algorithm always overwrites all the output channels.
+  // channels that didn't contain input data
   for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
     buffer.clear(i, 0, buffer.getNumSamples());
+
+  // Process MIDI with harmonics
+  if (harmonicEnabled) {
+    juce::MidiBuffer processedMidi;
+    const juce::ScopedLock lock(harmonicLock);
+    
+    for (const auto metadata : midiMessages) {
+      const auto message = metadata.getMessage();
+      const auto time = metadata.samplePosition;
+      
+      // Add the original MIDI message to our output buffer
+      processedMidi.addEvent(message, time);
+      
+      if (message.isNoteOn()) {
+        // Create a new ActiveNote entry to track this note and its harmonics
+        auto* activeNote = new ActiveNote();
+        activeNote->rootNote = message.getNoteNumber();
+        
+        // Calculate velocities for harmonic notes based on our harmonicValues
+        const int velocity = message.getVelocity();
+        
+        // Process each harmonic (skip the first one as it's the fundamental)
+        for (int h = 1; h < harmonicValues.size(); ++h) {
+          // Calculate the note for this harmonic
+          // (harmonic n = n times the fundamental frequency)
+          const float normalizedHarmonicValue = harmonicValues[h] / 100.0f; // Convert 0-100 to 0-1
+          
+          if (normalizedHarmonicValue > 0.01f) { // Only add harmonics with sufficient amplitude
+            // Calculate the MIDI note number for this harmonic
+            // Each octave is 12 semitones, log2(n) gives how many octaves above the fundamental
+            const float harmonicMultiple = h + 1; // Harmonic index + 1 (e.g., h=1 is the 2nd harmonic)
+            const float harmonicSemitones = 12.0f * std::log2(harmonicMultiple);
+            
+            // Round to nearest semitone
+            const int semitonesUp = std::round(harmonicSemitones);
+            int harmonicNote = message.getNoteNumber() + semitonesUp;
+            
+            // Ensure we don't exceed MIDI note range (0-127)
+            if (harmonicNote > 127) 
+              continue;
+            
+            // Set velocity based on the harmonic value (scaled by the original note velocity)
+            const int harmonicVelocity = juce::jlimit(1, 127, 
+              static_cast<int>(velocity * normalizedHarmonicValue));
+            
+            // Create MIDI note on for this harmonic
+            const juce::MidiMessage harmonicNoteOn = juce::MidiMessage::noteOn(
+              message.getChannel(), 
+              harmonicNote, 
+              static_cast<juce::uint8>(harmonicVelocity));
+            
+            // Add to the processed buffer
+            processedMidi.addEvent(harmonicNoteOn, time);
+            
+            // Track this harmonic note
+            activeNote->harmonicNotes.add(harmonicNote);
+          }
+        }
+        
+        // Store this active note
+        activeNotes.add(activeNote);
+      }
+      else if (message.isNoteOff()) {
+        // Find the corresponding active note
+        const int noteNumber = message.getNoteNumber();
+        
+        for (int i = activeNotes.size() - 1; i >= 0; --i) {
+          if (activeNotes[i]->rootNote == noteNumber) {
+            // Generate note offs for all harmonics of this note
+            for (const auto& harmonicNote : activeNotes[i]->harmonicNotes) {
+              const juce::MidiMessage harmonicNoteOff = juce::MidiMessage::noteOff(
+                message.getChannel(), harmonicNote);
+              processedMidi.addEvent(harmonicNoteOff, time);
+            }
+            
+            // Remove from active notes
+            activeNotes.remove(i);
+          }
+        }
+      }
+      else if (message.isAllNotesOff()) {
+        // Clear all active notes on all notes off message
+        activeNotes.clear();
+      }
+    }
+    
+    // Replace the original MIDI buffer with our processed one
+    midiMessages.swapWith(processedMidi);
+  }
 
   if (parameters.bypass->get() || buffer.getNumSamples() == 0) {
     return;
@@ -164,6 +247,19 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   }
 
   buffer.applyGain(parameters.gain->get());
+
+  // Apply panning
+  if (buffer.getNumChannels() >= 2) {
+    // Convert pan parameter from 0-1 range to -1 to 1 range
+    const float panValue = 2.0f * parameters.pan->get() - 1.0f; // -1 (left) to 1 (right)
+    
+    // Apply equal power panning
+    const float leftGain = std::cos((panValue + 1.0f) * juce::MathConstants<float>::pi * 0.25f);
+    const float rightGain = std::sin((panValue + 1.0f) * juce::MathConstants<float>::pi * 0.25f);
+    
+    buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
+    buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
+  }
 
   const auto inBlock =
       juce::dsp::AudioBlock<float>{buffer}.getSubsetChannelBlock(
@@ -230,8 +326,21 @@ AudioPluginAudioProcessor::createParameterLayout(
     layout.add(std::move(parameter));
   }
 
+  {
+    auto parameter = std::make_unique<AudioParameterFloat>(
+        id::PAN, "pan", NormalisableRange<float>{0.f, 1.f, 0.01f, 0.5f}, 0.5f);
+    parameters.pan = parameter.get();
+    layout.add(std::move(parameter));
+  }
+
   return layout;
 }
+
+void AudioPluginAudioProcessor::setHarmonicValues(const juce::Array<float>& newValues) {
+  const juce::ScopedLock lock(harmonicLock);
+  harmonicValues = newValues;
+}
+
 }  // namespace webview_plugin
 
 // This creates new instances of the plugin.

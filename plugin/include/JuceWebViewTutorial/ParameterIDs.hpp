@@ -6,4 +6,5 @@ namespace webview_plugin::id {
 const juce::ParameterID GAIN{"GAIN", 1};
 const juce::ParameterID BYPASS{"BYPASS", 1};
 const juce::ParameterID DISTORTION_TYPE{"DISTORTION_TYPE", 1};
+const juce::ParameterID PAN{"PAN", 1};
 }  // namespace webview_plugin::id

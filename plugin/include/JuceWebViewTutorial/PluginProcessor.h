@@ -45,6 +45,13 @@ public:
     return *parameters.distortionType;
   }
 
+  // New methods for harmonic processing
+  void setHarmonicValues(const juce::Array<float>& newValues);
+  bool getHarmonicEnabled() const { return harmonicEnabled; }
+  void setHarmonicEnabled(bool enabled) { harmonicEnabled = enabled; }
+  int getRootNote() const { return rootNote; }
+  void setRootNote(int newRoot) { rootNote = newRoot; }
+
   std::atomic<float> outputLevelLeft;
 
 private:
@@ -52,6 +59,7 @@ private:
     juce::AudioParameterFloat* gain{nullptr};
     juce::AudioParameterBool* bypass{nullptr};
     juce::AudioParameterChoice* distortionType{nullptr};
+    juce::AudioParameterFloat* pan{nullptr};
   };
 
   [[nodiscard]] static juce::AudioProcessorValueTreeState::ParameterLayout
@@ -61,6 +69,19 @@ private:
   juce::AudioProcessorValueTreeState state;
   juce::dsp::BallisticsFilter<float> envelopeFollower;
   juce::AudioBuffer<float> envelopeFollowerOutputBuffer;
+
+  // Harmonic processing members
+  juce::Array<float> harmonicValues;
+  juce::CriticalSection harmonicLock; // Thread safety for harmonics
+  bool harmonicEnabled = true;
+  int rootNote = 60; // Middle C by default
+  
+  // MIDI note tracking for harmonics
+  struct ActiveNote {
+    int rootNote;
+    juce::Array<int> harmonicNotes;
+  };
+  juce::OwnedArray<ActiveNote> activeNotes;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

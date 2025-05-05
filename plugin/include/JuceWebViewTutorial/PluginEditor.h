@@ -24,32 +24,21 @@ private:
       const juce::Array<juce::var>& args,
       juce::WebBrowserComponent::NativeFunctionCompletion completion);
 
-  juce::TextButton runJavaScriptButton{"Run some JavaScript"};
-  juce::TextButton emitJavaScriptEventButton{"Emit JavaScript event"};
-  juce::Label labelUpdatedFromJavaScript{"label",
-                                         "To be updated from JavaScript"};
-
   AudioPluginAudioProcessor& processorRef;
 
+  // Native UI - Only one slider, one button, and one label
   juce::Slider gainSlider{"gain slider"};
   juce::SliderParameterAttachment gainSliderAttachment;
-
   juce::ToggleButton bypassButton{"Bypass"};
   juce::ButtonParameterAttachment bypassButtonAttachment;
+  juce::Label infoLabel{"info label", "Simple UI"};
 
-  juce::Label distortionTypeLabel{"distortion type label", "Distortion"};
-  juce::ComboBox distortionTypeComboBox{"distortion type combo box"};
-  juce::ComboBoxParameterAttachment distortionTypeComboBoxAttachment;
-
+  // Web UI - Only keep what we need
   juce::WebSliderRelay webGainRelay;
   juce::WebToggleButtonRelay webBypassRelay;
-  juce::WebComboBoxRelay webDistortionTypeRelay;
-
   juce::WebBrowserComponent webView;
-
   juce::WebSliderParameterAttachment webGainSliderAttachment;
   juce::WebToggleButtonParameterAttachment webBypassToggleAttachment;
-  juce::WebComboBoxParameterAttachment webDistortionTypeComboBoxAttachment;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)
 };

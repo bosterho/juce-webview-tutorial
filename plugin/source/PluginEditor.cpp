@@ -11,6 +11,10 @@
 #include <WebViewFiles.h>
 
 namespace webview_plugin {
+
+// Development mode toggle - set to true to use the dev server with hot reloading
+constexpr bool USE_DEV_SERVER = true;
+
 namespace {
 std::vector<std::byte> streamToVector(juce::InputStream& stream) {
   using namespace juce;
@@ -87,8 +91,6 @@ std::vector<std::byte> getWebViewFileAsBytes(const juce::String& filepath) {
 
 constexpr auto LOCAL_DEV_SERVER_ADDRESS = "http://127.0.0.1:8080";
 
-// Development mode toggle - set to true to use the dev server with hot reloading
-constexpr bool USE_DEV_SERVER = true;
 }  // namespace
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
@@ -155,7 +157,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
     infoLabel.setText("DEVELOPMENT MODE: Connected to React dev server", 
                      juce::dontSendNotification);
   } else {
-    // Use the bundled resources
+  //   // Use the bundled resources
     webView.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
   }
 }

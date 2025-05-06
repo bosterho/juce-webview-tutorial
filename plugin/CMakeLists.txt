@@ -17,6 +17,8 @@ juce_add_plugin(${PROJECT_NAME}
     NEEDS_WEB_BROWSER TRUE
     # This will force JUCE to look for the WebView2 NuGet package on Windows
     NEEDS_WEBVIEW2 TRUE
+    # Automatically copy the plugin to standard plugin locations after build
+    JUCE_COPY_PLUGIN_AFTER_BUILD TRUE
 )
 
 get_target_property(PRODUCT_NAME ${PROJECT_NAME} JUCE_PRODUCT_NAME)

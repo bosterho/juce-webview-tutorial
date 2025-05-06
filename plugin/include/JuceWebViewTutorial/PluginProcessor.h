@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <array>
 
 namespace webview_plugin {
 class AudioPluginAudioProcessor : public juce::AudioProcessor {
@@ -46,6 +47,12 @@ public:
   }
 
   std::atomic<float> outputLevelLeft;
+  
+  // Set the bar values for MIDI velocity control (values from 0-127)
+  void setMidiVelocities(const std::array<int, 8>& velocities) {
+    juce::SpinLock::ScopedLockType lock(midiVelocitiesLock);
+    midiVelocities = velocities;
+  }
 
 private:
   struct Parameters {
@@ -61,6 +68,10 @@ private:
   juce::AudioProcessorValueTreeState state;
   juce::dsp::BallisticsFilter<float> envelopeFollower;
   juce::AudioBuffer<float> envelopeFollowerOutputBuffer;
+  
+  // Bar editor values (MIDI velocities 0-127)
+  std::array<int, 8> midiVelocities{64, 64, 64, 64, 64, 64, 64, 64}; // Default mid-velocity
+  juce::SpinLock midiVelocitiesLock;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

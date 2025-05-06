@@ -135,6 +135,20 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
                                 .toString(),
                         juce::dontSendNotification);
                   })
+              .withEventListener(
+                  "barEditorUpdate",
+                  [this](juce::var objectFromFrontend) {
+                    // Handle bar editor update from JavaScript
+                    if (auto* midiVelocitiesArray = objectFromFrontend.getProperty("midiVelocities", juce::var()).getArray()) {
+                        std::array<int, 8> velocities;
+                        for (int i = 0; i < std::min(8, midiVelocitiesArray->size()); ++i) {
+                            velocities[i] = static_cast<int>((*midiVelocitiesArray)[i]);
+                        }
+                        
+                        // Pass velocities to the audio processor
+                        processorRef.setMidiVelocities(velocities);
+                    }
+                  })
               .withNativeFunction(
                   juce::Identifier{"nativeFunction"},
                   [this](const juce::Array<juce::var>& args,

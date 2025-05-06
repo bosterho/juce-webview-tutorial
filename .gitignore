@@ -3,6 +3,7 @@ todo.md
 .vscode
 libs/
 build/
+build-*/
 xcode-build/
 release-build/
 vs-build/
